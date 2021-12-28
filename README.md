@@ -1,0 +1,2 @@
+# SSCRABBLE
+Program game scrabble
