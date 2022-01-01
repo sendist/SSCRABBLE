@@ -15,6 +15,7 @@ void printPapan();
 void tampilHurufPemain();
 void bersihkanPapan();
 void taruhBlok(char blok, int baris, int kolom);
+void help();
 
 //MODUL UNTUK KECERDASAN KOMPUTER/BOT
 void giliranKomputer();
@@ -41,6 +42,8 @@ int tilesLeft();
 void gotoxy(int x, int y);
 void resetAll();
 int akhirPermainan();
+int hurufPertama();
+void tentukanPemenang();
 
 //VARIABEL GLOBAL
 
@@ -54,6 +57,13 @@ int skorKomputer = 0;
 int kesulitan;
 int timer;
 int lewati = 0;
+
+typedef struct {
+    int B, K;
+} koordinat;
+koordinat barisKolom;
+
+
 
 int x = 10,  y = 5, K = 0, B = 0; 
     char papan[15][15] = {
@@ -114,7 +124,8 @@ void mulaiPermainan() {
     printPapan();
     tambahHuruf(hurufKomputer);
     tambahHuruf(hurufPemain);
-    tilesLeft();
+    gotoxy(40, 55);
+    printf("%d  ", tilesLeft());
     while(akhirPermainan() == 0) {
         //gotoxy(100, 1+i);
         //puts(hurufKomputer);
@@ -153,7 +164,7 @@ int validasiSekitarKata() {
             if(papan[i][j] != papan2[i][j]) {
                 flag *= validBaris(i, j);
                 flag *= validKolom(i, j);
-                if((papan[i+1][j] != ' ' || papan[i-1][j] != ' ' || papan[i][j+1] != ' ' || papan[i][j-1] != ' ') || tilesLeft() == 84) {
+                if((papan[i+1][j] != ' ' || papan[i-1][j] != ' ' || papan[i][j+1] != ' ' || papan[i][j-1] != ' ') || (tilesLeft() == 84 && strlen(tempHurufPemain) == 7)) {
                     flag2 = 1;
                 }
             }
@@ -402,7 +413,12 @@ int checkTilesBag() {
 //MODUL PENENTUAN KATA OLEH KOMPUTER
 void giliranKomputer() {
     char *temp = (char*)malloc(sizeof(char)*7), penampungFile[26];
-    FILE *file = fopen("D:\\4000word.txt", "r");
+    FILE *file;
+    switch(kesulitan) {
+        case 1 : file = fopen("D:\\1000word.txt", "r");
+        case 2 : file = fopen("D:\\4000word.txt", "r");
+        case 3 : file = fopen("D:\\10000word.txt", "r");
+    }
     long long count, hurufGaada;
     do {
         count = fscanf(file, "%s", penampungFile);
@@ -492,6 +508,7 @@ void giliranPemain() {
 //prosedur untuk menggerakan kursor
 void isiPapanPemain(int* x, int* y) {
     char get;
+    barisKolom.B = -1;
     do {
         while(!kbhit() && second-awalSecond < timer) {      //Algoritma untuk timer
             second = time(NULL);
@@ -511,11 +528,17 @@ void isiPapanPemain(int* x, int* y) {
             *x +=6; K +=1;
         } else if(get == 80 && *y <= 45) {      //Gerak kursor ke bawah
             *y +=3; B +=1;
-        } else if(isalpha(get) && !isalpha(papan2[B][K])&& get != 'K' && get != 'H' && get != 'M' && get != 'P' && periksaHuruf(get) == 1) {
-            putchar(toupper(get));                      //Menaruh blok ke papan ketika huruf dipunyai pemain
-            papan2[B][K] = toupper(get);
-            taruhBlok(papan2[B][K], B, K);
-            tampilHurufPemain();
+        } else if(isalpha(get) && !isalpha(papan2[B][K])&& get != 'K' && get != 'H' && get != 'M' && get != 'P' && periksaHuruf(get) >= 0) {
+            if((hurufPertama() == 0 || barisKolom.B == B || K == barisKolom.K) && (hurufPertama() == 0 || (isalpha(papan2[B+1][K]) || isalpha(papan2[B-1][K]) || isalpha(papan2[B][K+1]) || isalpha(papan2[B][K-1])) || (isalpha(papan[B+1][K]) || isalpha(papan[B-1][K]) || isalpha(papan[B][K+1]) || isalpha(papan[B][K-1])) || (tilesLeft() == 84 && strlen(tempHurufPemain) == 7))) {
+                putchar(toupper(get));                      //Menaruh blok ke papan ketika huruf dipunyai pemain
+                papan2[B][K] = toupper(get);
+                taruhBlok(papan2[B][K], B, K);
+                tempHurufPemain[periksaHuruf(get)] = ' ';
+                tampilHurufPemain();
+                if(hurufPertama() == 1) {
+                    barisKolom.B = B; barisKolom.K = K;
+                }
+            }
         } else if(get == 8 && papan[B][K] == ' ') {     //Menghapus blok dari papan ketika user menekan BACKSPACE
             for(int i = 0; i < 7; i++) {
                 if(tempHurufPemain[i] == ' ') {
@@ -542,15 +565,25 @@ void isiPapanPemain(int* x, int* y) {
     } while(get != 13 && second-awalSecond < timer);    //Keluar ketika user menekan ENTER atau waktu sudah habis
 }
 
+//MODUL PEMERIKSAAN INPUTAN HURUF PERTAMA
+int hurufPertama() {
+    int count = 0, i, j; 
+    for(i = 0; i < 15 && count <= 2; i++) {
+        for(j = 0; j < 15 && count <= 2; j++) {
+            count += papan[i][j] != papan2[i][j] ? 1 : 0;
+        }
+    }
+    return count;
+}
+
 //MODUL PEMERIKSAAN APAKAH HURUF DIMILIKI PEMAIN
 int periksaHuruf(char huruf) {
     for(int i = 0; i < 7; i++) {
         if(tempHurufPemain[i] == toupper(huruf)) {
-            tempHurufPemain[i] = ' ';
-            return 1;           //Mengembalikan 1 jika huruf dimiliki
+            return i;           //Mengembalikan 1 jika huruf dimiliki
         }
     }
-    return 0;       //Mengembalikan 0 jika huruf tidak dimiliki
+    return -1;       //Mengembalikan -1 jika huruf tidak dimiliki
 }
 
 //MODUL UNTUK MEMBERSIHKAN BLOK DARI PAPAN
@@ -577,7 +610,11 @@ void tampilHurufPemain() {
         if(tempHurufPemain[i] == ' ') {
             printf("  ");
         } else {
-            printf("%d", tentukanPoin(tempHurufPemain[i]));
+            if(tentukanPoin(tempHurufPemain[i]) < 10) {
+                printf("%d ", tentukanPoin(tempHurufPemain[i]));
+            } else {
+                printf("%d", tentukanPoin(tempHurufPemain[i]));
+            }
         }
     }
 }
@@ -717,13 +754,34 @@ void mainMenu() {
         system("cls");
         mulaiPermainan();
     }else if(y == 6) {  //Memanggil modul help() ketika kursor berada pada tulisan HELP
-        system("cls");
-        printf("HELP");
+        help();
+        if(getch() != '\0') {
+            mainMenu();
+        }
     } else if(y == 8 ) {    //Keluar permainan ketika kursor berada pada tulisan EXIT
         system("cls");
-        printf("BYE - BYE\n\n\n\n");
+        //Mengubah ukuran console/terminal
+        SMALL_RECT windowSize2 = {0 , 0 , 94, 6};
+        SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &windowSize2);
+        printf("\n\n\t\t\t\t\tSELAMAT TINGGAL\n\n\t\t\t\t\t  TERIMAKASIH\n");
+        getch();
         exit(1);
     }
+}
+
+//MODUL MEMUNCULKAN HELP
+void help() {
+    //Mengubah ukuran console/terminal
+    SMALL_RECT windowSize2 = {0 , 0 , 104 , 34};
+    SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &windowSize2);
+    system("cls");
+    FILE *file = fopen("D:\\help.txt", "r");
+    char tampung[2000];
+    long long count;
+        count = fread(tampung, sizeof(char), 2000, file);
+        tampung[count] = '\0';
+        puts(tampung);
+    fclose(file);
 }
 
 //MODUL UNTUK MEMERIKSA APAKAH AKHIR PERMAINAN TERCAPAI
@@ -739,6 +797,20 @@ int akhirPermainan() {
         }
     }
     return end;
+}
+
+//MODUL MENENTUKAN PEMENANG
+void tentukanPemenang() {
+    if(skorPemain > skorKomputer) {
+        gotoxy(50, 22);
+        printf("YOU WIN");
+    } else if(skorPemain == skorKomputer) {
+        gotoxy(50, 22);
+        printf("YOU LOSE");
+    } else {
+        gotoxy(50, 22);
+        printf("TIE");
+    }
 }
 
 //MODUL UNTUK RESTART (RESET SEMUA VARIABEL)
