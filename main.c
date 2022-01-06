@@ -63,8 +63,6 @@ typedef struct {
 } koordinat;
 koordinat barisKolom;
 
-
-
 int x = 10,  y = 5, K = 0, B = 0; 
     char papan[15][15] = {
         {' ', ' ', ' ', ' ', ' ',' ', ' ',' ', ' ', ' ', ' ', ' ',' ', ' ', ' '},
@@ -110,7 +108,10 @@ int idx = 0;
 
 //MODUL UTAMA (MAIN MODULE)
 int main () {
-    mainMenu();
+    while(1) {
+        mainMenu();
+        getch();
+    }
     return 0;
 }
 
@@ -127,10 +128,6 @@ void mulaiPermainan() {
     gotoxy(40, 55);
     printf("%d  ", tilesLeft());
     while(akhirPermainan() == 0) {
-        //gotoxy(100, 1+i);
-        //puts(hurufKomputer);
-        //gotoxy(110, 1+i);
-        //puts(hurufPemain);
         gotoxy(x, y);
         tukarHuruf(hurufKomputer);
         giliranPemain();
@@ -143,6 +140,8 @@ void mulaiPermainan() {
         printf("%d  ", tilesLeft());
         giliranKe++;
     }
+    tentukanPemenang();
+    resetAll();
 }
 
 //MODUL HITUNG HURUF YANG TERSISA
@@ -169,6 +168,9 @@ int validasiSekitarKata() {
                 }
             }
         }
+    }
+    if(tilesLeft() == 84 && !isalpha(papan2[7][7])) {
+        flag2 = 0;
     }
     return flag * flag2;
 }
@@ -459,6 +461,7 @@ long long awalSecond, secondSebelum;
 void giliranPemain() {
     int selesai = 0;
     lewati = 0;
+    barisKolom.B = -1;
     second = time(NULL);
     awalSecond = second;
     strcpy(tempHurufPemain, hurufPemain);
@@ -508,7 +511,6 @@ void giliranPemain() {
 //prosedur untuk menggerakan kursor
 void isiPapanPemain(int* x, int* y) {
     char get;
-    barisKolom.B = -1;
     do {
         while(!kbhit() && second-awalSecond < timer) {      //Algoritma untuk timer
             second = time(NULL);
@@ -529,7 +531,7 @@ void isiPapanPemain(int* x, int* y) {
         } else if(get == 80 && *y <= 45) {      //Gerak kursor ke bawah
             *y +=3; B +=1;
         } else if(isalpha(get) && !isalpha(papan2[B][K])&& get != 'K' && get != 'H' && get != 'M' && get != 'P' && periksaHuruf(get) >= 0) {
-            if((hurufPertama() == 0 || barisKolom.B == B || K == barisKolom.K) && (hurufPertama() == 0 || (isalpha(papan2[B+1][K]) || isalpha(papan2[B-1][K]) || isalpha(papan2[B][K+1]) || isalpha(papan2[B][K-1])) || (isalpha(papan[B+1][K]) || isalpha(papan[B-1][K]) || isalpha(papan[B][K+1]) || isalpha(papan[B][K-1])) || (tilesLeft() == 84 && strlen(tempHurufPemain) == 7))) {
+            if((hurufPertama() == 0 || barisKolom.B == B || K == barisKolom.K) && (hurufPertama() == 0 || (isalpha(papan2[B+1][K]) || isalpha(papan2[B-1][K]) || isalpha(papan2[B][K+1]) || isalpha(papan2[B][K-1])) || (isalpha(papan[B+1][K]) || isalpha(papan[B-1][K]) || isalpha(papan[B][K+1]) || isalpha(papan[B][K-1])))) {
                 putchar(toupper(get));                      //Menaruh blok ke papan ketika huruf dipunyai pemain
                 papan2[B][K] = toupper(get);
                 taruhBlok(papan2[B][K], B, K);
@@ -802,14 +804,14 @@ int akhirPermainan() {
 //MODUL MENENTUKAN PEMENANG
 void tentukanPemenang() {
     if(skorPemain > skorKomputer) {
-        gotoxy(50, 22);
-        printf("YOU WIN");
-    } else if(skorPemain == skorKomputer) {
-        gotoxy(50, 22);
-        printf("YOU LOSE");
+        gotoxy(70, 55);
+        printf("\033[42m YOU WIN \033[0m\n");
+    } else if(skorPemain < skorKomputer) {
+        gotoxy(70, 55);
+        printf("\033[41m YOU LOSE \033[0m\n");
     } else {
-        gotoxy(50, 22);
-        printf("TIE");
+        gotoxy(70, 55);
+        printf("\033[44m TIE \033[0m\n");
     }
 }
 
