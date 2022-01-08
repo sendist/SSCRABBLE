@@ -25,12 +25,12 @@ int cekKosongKanan(int baris, int kolom, int hurufKe, int panjangKata);
 int cekKosongBawah(int baris, int kolom, int hurufKe, int panjangKata);
 
 //MODUL UNTUK PEMAIN
-void mulaiPermainan();
 void giliranPemain();
 void isiPapanPemain(int* x, int* y);
 int periksaHuruf(char huruf);
 
 //MODUL UMUM
+void mulaiPermainan();
 int cekKamus(char kata[]);
 void tambahHuruf(char huruf[]);
 int tentukanPoin(char huruf);
@@ -135,7 +135,6 @@ void mulaiPermainan() {
         printf("%d  ", tilesLeft());
         giliranKe++;
         giliranKomputer();
-        tambahHuruf(hurufKomputer);
         gotoxy(40, 55);
         printf("%d  ", tilesLeft());
         giliranKe++;
@@ -169,7 +168,8 @@ int validasiSekitarKata() {
             }
         }
     }
-    if(tilesLeft() == 84 && !isalpha(papan2[7][7])) {
+    //Membuat pemain harus memasukan kata pertama melewati bagian tengah papan
+    if((tilesLeft() == 84 && !isalpha(papan2[7][7])) || (papan2[6][7] == ' ' && papan2[8][7] == ' ' && papan2[7][6] == ' ' && papan2[7][8] == ' ')) {
         flag2 = 0;
     }
     return flag * flag2;
@@ -403,15 +403,6 @@ void komputerMengisiPapan(char kata[]) {
     idx = 0;
 }
 
-int checkTilesBag() {
-    for(int i = 0; i < 100; i++) {
-        if(blokScrabble[i] != ' ') {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 //MODUL PENENTUAN KATA OLEH KOMPUTER
 void giliranKomputer() {
     char *temp = (char*)malloc(sizeof(char)*7), penampungFile[26];
@@ -451,6 +442,7 @@ void giliranKomputer() {
         lewati += 1;
     }
     fclose(file);
+    tambahHuruf(hurufKomputer);
 }
 
 //VARIABEL UNTUK PEMBATASAN WAKTU
