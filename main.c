@@ -52,11 +52,13 @@ char blokScrabble2[100] = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMM
 char hurufKomputer[7] = "       ";
 char hurufPemain[7] = "       ";
 char tempHurufPemain[7];
+int giliranKe = 1;
 int skorPemain = 0;
 int skorKomputer = 0;
 int kesulitan;
 int timer;
 int lewati = 0;
+int akhir = 0;
 
 typedef struct {
     int B, K;
@@ -102,7 +104,6 @@ int x = 10,  y = 5, K = 0, B = 0;
         {' ', ' ', ' ', ' ', ' ',' ', ' ',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}
     };
 
-int giliranKe = 1;
 char tampungKata[15][15];
 int idx = 0;
 
@@ -127,7 +128,7 @@ void mulaiPermainan() {
     tambahHuruf(hurufPemain);
     gotoxy(40, 55);
     printf("%d  ", tilesLeft());
-    while(akhirPermainan() == 0) {
+    while(akhirPermainan() == 0 && akhir == 0) {
         gotoxy(x, y);
         tukarHuruf(hurufKomputer);
         giliranPemain();
@@ -458,7 +459,7 @@ void giliranPemain() {
     awalSecond = second;
     strcpy(tempHurufPemain, hurufPemain);
     tampilHurufPemain();
-    while(second-awalSecond < timer && selesai == 0) {
+    while(second-awalSecond < timer && selesai == 0 && akhir == 0) {
         for(int i = 0 ; i < 15; i++) {
             tampungKata[i][0] = '\0';
         }
@@ -467,6 +468,8 @@ void giliranPemain() {
 
         //Menentukan skor pemain ketika kata yang dimainkan valid
         if(validasiSekitarKata()) {
+            gotoxy(70, 55);
+            printf("\033[42m VALID WORD \033[0m      \n");
             skorPemain += tentukanSkor();
             gotoxy(18, 52);
             printf("%d", skorPemain);
@@ -475,6 +478,9 @@ void giliranPemain() {
             for(int i = 0; i < 15; i++) {
                 strcpy(papan[i], papan2[i]);
             }
+        } else {
+            gotoxy(70, 55);
+            printf("\033[41m NOT A VALID WORD \033[0m\n");
         }
         
     }
@@ -490,6 +496,9 @@ void giliranPemain() {
     tambahHuruf(hurufPemain);
     strcpy(tempHurufPemain, hurufPemain);
     tampilHurufPemain();
+    Sleep(1000);
+    gotoxy(70, 55);
+    printf("                          ");
 
     //Membersihkan array tampungKata supaya bisa digunakan untuk giliran berikutnya
     for(int i = 0 ; i < 15; i++) {
@@ -543,6 +552,8 @@ void isiPapanPemain(int* x, int* y) {
             gotoxy(*x + 1, *y + 1);
             printf("  ");
             tampilHurufPemain();
+            gotoxy(70, 55);
+            printf("                          ");
         } else if(get == '1') {
             tukarHuruf(hurufPemain);
             awalSecond -= 100;
@@ -555,8 +566,10 @@ void isiPapanPemain(int* x, int* y) {
         } else if(get == '4') {
             resetAll();
             mainMenu();
+        } else if(get == '5') {
+            akhir = 1;
         }
-    } while(get != 13 && second-awalSecond < timer);    //Keluar ketika user menekan ENTER atau waktu sudah habis
+    } while(get != 13 && second-awalSecond < timer && akhir == 0);    //Keluar ketika user menekan ENTER atau waktu sudah habis
 }
 
 //MODUL PEMERIKSAAN INPUTAN HURUF PERTAMA
@@ -822,6 +835,7 @@ void resetAll() {
     strcpy(tempHurufPemain, hurufPemain);
     skorPemain = 0; skorKomputer = 0;
     giliranKe = 1;
+    akhir = 0;
     strcpy(blokScrabble, blokScrabble2);
     x = 10; y = 5; B = 0; K = 0;
 }
