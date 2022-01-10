@@ -403,7 +403,7 @@ void komputerMengisiPapan(char kata[]) {
     idx = 0;
 }
 
-//MODUL PENENTUAN KATA OLEH KOMPUTER
+//MODUL PENENTUAN KATA OLEH KOMPUTER SERTA GILIRAN KOMPUTER
 void giliranKomputer() {
     char *temp = (char*)malloc(sizeof(char)*7), penampungFile[26];
     FILE *file;
