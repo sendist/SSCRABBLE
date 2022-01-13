@@ -18,11 +18,12 @@ void taruhBlok(char blok, int baris, int kolom);
 void help();
 
 //MODUL UNTUK KECERDASAN KOMPUTER/BOT
-void giliranKomputer();
+void giliranKomputer(char kataDariPapan[], int baris, int kolom, int* selesai, char orientasi);
 void komputerMengisiPapan(char kata[]);
 void eksekusiPengisian(int brsPpn, int kolPpn, int letakAwal, int jmlHrf, int posHrf, char kata[], char orientasi);
 int cekKosongKanan(int baris, int kolom, int hurufKe, int panjangKata);
 int cekKosongBawah(int baris, int kolom, int hurufKe, int panjangKata);
+void cariKataDariPapan();
 
 //MODUL UNTUK PEMAIN
 void giliranPemain();
@@ -46,7 +47,6 @@ int hurufPertama();
 void tentukanPemenang();
 
 //VARIABEL GLOBAL
-
 char blokScrabble[100] = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ  ";
 char blokScrabble2[100] = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ  ";
 char hurufKomputer[7] = "       ";
@@ -128,6 +128,7 @@ void mulaiPermainan() {
     tambahHuruf(hurufPemain);
     gotoxy(40, 55);
     printf("%d  ", tilesLeft());
+    //LOOP BERJALAN SAMPAI AKHIR PERMAINAN TERCAPAI
     while(akhirPermainan() == 0 && akhir == 0) {
         gotoxy(x, y);
         tukarHuruf(hurufKomputer);
@@ -135,7 +136,7 @@ void mulaiPermainan() {
         gotoxy(40, 55);
         printf("%d  ", tilesLeft());
         giliranKe++;
-        giliranKomputer();
+        cariKataDariPapan();
         gotoxy(40, 55);
         printf("%d  ", tilesLeft());
         giliranKe++;
@@ -249,6 +250,7 @@ void tukarHuruf(char huruf[]) {
 }
 
 //MODUL TAMBAH HURUF
+//Menambahkan huruf ketika huruf telah digunakan/ditaruh ke papan
 void tambahHuruf(char huruf[]) {
     int r = rand() % 100;   
     for(int i = 0; i < 7; i++) {
@@ -321,7 +323,9 @@ int cekKosongBawah(int baris, int kolom, int hurufKe, int panjangKata) {
 }
 
 //MODUL EKSEKUSI PENGISIAN PAPAN DENGAN KATA YANG TELAH DITENTUKAN KOMPUTER
+//menampilkan huruf ke papan dan juga menyimpannya ke papan
 void eksekusiPengisian(int brsPpn, int kolPpn, int letakAwal, int jmlHrf, int posHrf, char kata[], char orientasi) {
+    //pengisian untuk horizontal atau ke kanan
     if(orientasi == 'k') {
         for(int i = 0, j = letakAwal; i < jmlHrf; i++, j++) {
             papan[brsPpn][j] = toupper(kata[i]);
@@ -334,6 +338,7 @@ void eksekusiPengisian(int brsPpn, int kolPpn, int letakAwal, int jmlHrf, int po
             }
         }
     }
+    //pengisian untuk vertikal atau ke bawah
     else {
         for(int i = 0, j = letakAwal; i < jmlHrf; i++, j++) {
             papan[j][kolPpn] = toupper(kata[i]);
@@ -348,97 +353,144 @@ void eksekusiPengisian(int brsPpn, int kolPpn, int letakAwal, int jmlHrf, int po
     }
 }
 
-//MODUL PENGISIAN PAPAN OLEH KOMPUTER
-void komputerMengisiPapan(char kata[]) {
-    int letakAwal, bisa = 0;
-    for(int i = 0; i < strlen(kata); i++) {
-        for(int j = 0; j < 15; j++) {
-            for(int k = 0; k < 15; k++) {
-                if(papan[j][k] == toupper(kata[i])) {
-                    //cek apakah baris bisa diisi oleh kata yang ditentukan komputer
-                    letakAwal = cekKosongKanan(j, k, i, strlen(kata));
-                    if(letakAwal >= 0) {
-                        bisa = 1;
-                        for(int l = 0, m = letakAwal; l < strlen(kata); l++, m++) {
-                            papan2[j][m] = toupper(kata[l]);
-                        }
-                        //jika bisa diisi, maka akan dicek apakah kata di sekitarnya akan valid atau tidak
-                        if(validasiSekitarKata()) {
-                            eksekusiPengisian(j, k, letakAwal, strlen(kata), i, kata, 'k');
-                            skorKomputer += tentukanSkor();
-                        }else {
-                            for(int i = 0; i < 15; i++) {
-                                strcpy(papan2[i], papan[i]);
-                            }
-                        }
-                    } else {
-                        //Cek apakah kolom bisa diisi oleh kata yang ditentukan komputer
-                        letakAwal = cekKosongBawah(j, k, i, strlen(kata));
-                        if(letakAwal >= 0) {
-                            bisa = 1;
-                            for(int l = 0, m = letakAwal; l < strlen(kata); l++, m++) {
-                                papan2[m][k] = toupper(kata[l]);
-                            }
-                            //jika bisa diisi, maka akan dicek apakah kata di sekitarnya akan valid atau tidak
-                            if(validasiSekitarKata()) {
-                                eksekusiPengisian(j, k, letakAwal, strlen(kata), i, kata, 'b');
-                                skorKomputer += tentukanSkor();
-                            } else {
-                                for(int i = 0; i < 15; i++) {
-                                    strcpy(papan2[i], papan[i]);
-                                }
-                            }
-                        }
-                    }
-                }
-                if(bisa == 1) break;
-            }
-            if(bisa == 1) break;
+//Modul Pengisian papan oleh komputer
+int komputerMengisiPapan2(char kata[], int baris, int kolom, char orientasi) {
+    int berhasil = 0;
+    //Untuk orientasi horizontal atau ke kanan
+    if(orientasi == 'k') {
+        int K = kolom;
+        for(int i = 0; i < strlen(kata); i++, K++) {
+            papan2[baris][K] = toupper(kata[i]);
         }
-        if(bisa == 1) break;
+        //jika bisa diisi, maka akan dicek apakah kata di sekitarnya akan valid atau tidak
+        if(validasiSekitarKata()) {
+            eksekusiPengisian(baris, kolom, kolom, strlen(kata), kata[0], kata, 'k');
+            skorKomputer += tentukanSkor();
+            berhasil = 1;
+        }else {
+            for(int i = 0; i < 15; i++) {
+                strcpy(papan2[i], papan[i]);
+            }
+        }
+
+        //untuk orientasi vertikal atau ke bawah
+    } else {
+        int B = baris;
+        for(int i = 0 ; i < strlen(kata); i++, B++) {
+            papan2[B][kolom] = toupper(kata[i]);
+        }
+        if(validasiSekitarKata()) {
+            eksekusiPengisian(baris, kolom, baris, strlen(kata), kata[0], kata, 'b');
+            skorKomputer += tentukanSkor();
+            berhasil = 1;
+        }else {
+            for(int i = 0; i < 15; i++) {
+                strcpy(papan2[i], papan[i]);
+            }
+        }
     }
     //Membersihkan array tampungKata supaya bisa digunakan untuk giliran berikutnya
     for(int i = 0 ; i < 15; i++) {
         tampungKata[i][0] = '\0';
     }
     idx = 0;
+    return berhasil;
+}
+
+//MODUL UNTUK MENGAMBIL KATA YANG TELAH ADA DI PAPAN
+void cariKataDariPapan() {
+    int selesai = 0;
+    char kataDariPapan[15];
+    //Mencari kata dari papan dengan orientasi horizontal atau ke kanan
+    for(int k = 0; k < 15 && selesai == 0; k++) {
+        for(int l = 0; l < 15 && selesai == 0; l++) {
+            if(papan[k][l] != ' ') {
+                int m;
+                for(m = l; papan[k][m] != ' '; m++) {
+                    kataDariPapan[m-l] = papan[k][m];
+                }
+                kataDariPapan[m-l] = '\0';
+                //ketika kata telah diambil, maka akan dicari kata lain yang dapat dibentuk
+                giliranKomputer(kataDariPapan, k, m-1, &selesai, 'k');
+                kataDariPapan[0] = '\0';
+                l = m;
+            }
+        }
+    }
+    //Jika tidak bisa, maka akan dicari kata yang orientasinya vertikal atau ke bawah
+    if(selesai == 0) {
+        for(int k = 0; k < 15 && selesai == 0; k++) {
+            for(int l = 0; l < 15 && selesai == 0; l++) {
+                if(papan[l][k] != ' ') {
+                    int m;
+                    for(m = l; papan[m][k] != ' '; m++) {
+                        kataDariPapan[m-l] = papan[m][k];
+                    }
+                    kataDariPapan[m-l] = '\0';
+                    giliranKomputer(kataDariPapan, m-1, k, &selesai, 'b');
+                    kataDariPapan[0] = '\0';
+                    l = m;
+                }
+            }
+        }
+    }
 }
 
 //MODUL PENENTUAN KATA OLEH KOMPUTER SERTA GILIRAN KOMPUTER
-void giliranKomputer() {
-    char *temp = (char*)malloc(sizeof(char)*7), penampungFile[26];
-    FILE *file;
-    switch(kesulitan) {
-        case 1 : file = fopen("D:\\1000word.txt", "r");
-        case 2 : file = fopen("D:\\4000word.txt", "r");
-        case 3 : file = fopen("D:\\10000word.txt", "r");
-    }
-    long long count, hurufGaada;
-    do {
-        count = fscanf(file, "%s", penampungFile);
-        strcpy(temp, hurufKomputer);
+void giliranKomputer(char kataDariPapan[], int baris, int kolom, int *selesai, char orientasi) {
+        char *temp = (char*)malloc(sizeof(char)*7), penampungFile[26], sisaKamus[26];
+        FILE *file;
+        int bisa, berhasil;
+        switch(kesulitan) {
+            case 1 : file = fopen("D:\\1000word.txt", "r");
+            case 2 : file = fopen("D:\\4000word.txt", "r");
+            case 3 : file = fopen("D:\\10000word.txt", "r");
+        }
+        long long count, hurufGaada;
 
-        //Menentukan apakah huruf-huruf dari kata dimiliki oleh komputer
-        for(int i = 0; i < strlen(penampungFile); i++) {
-            hurufGaada = 1; 
-            for(int j = 0; j < 7; j++) {
-                if(toupper(penampungFile[i]) == temp[j]) {
-                    temp[j] = ' '; hurufGaada = 0; break;
+        do {
+            count = fscanf(file, "%s", penampungFile);
+            strcpy(temp, hurufKomputer);
+            bisa = 1;
+            for(int n = 0; n < strlen(kataDariPapan); n++) {
+                if(kataDariPapan[n] != toupper(penampungFile[n])) {
+                    bisa = 0; break;
                 }
             }
-            if(hurufGaada == 1) {
-                break;
-            }
-        }
 
-        //Jika semua huruf ada, maka akan dicari tempat yang tepat untuk menaruh kata tersebut
-        if(hurufGaada == 0) {
-            komputerMengisiPapan(penampungFile); 
-            gotoxy(85, 52);
-            printf("%d", skorKomputer);
-            fclose(file); break;
+            if(bisa == 1) {
+                int p, o;
+                for(o = strlen(kataDariPapan)-1, p = 0; o < strlen(penampungFile); o++, p++) {
+                    sisaKamus[p] = toupper(penampungFile[o]);
+                }
+                sisaKamus[p] = '\0';
+                //Menentukan apakah huruf-huruf dari kata dimiliki oleh komputer
+                for(int i = 1; i < strlen(sisaKamus); i++) {
+                    hurufGaada = 1; 
+                    for(int j = 0; j < 7; j++) {
+                        if(toupper(sisaKamus[i]) == temp[j]) {
+                            temp[j] = ' '; hurufGaada = 0; break;
+                        }
+                    }
+                    if(hurufGaada == 1) {
+                        break;
+                    }
+                }
+            }
+
+            //Jika semua huruf ada, maka akan dicari tempat yang tepat untuk menaruh kata tersebut
+            if(hurufGaada == 0) {
+                berhasil = komputerMengisiPapan2(sisaKamus, baris, kolom, orientasi); 
+                gotoxy(85, 52);
+                printf("%d", skorKomputer);
+                gotoxy(x, y);
+                fclose(file); break;
+            }
+        } while(!feof(file));
+
+        if(berhasil == 1) {
+            *selesai = 1;
         }
-    } while(!feof(file));
     if(tilesLeft() == 0 && hurufGaada == 1) {
         lewati += 1;
     }
@@ -523,6 +575,7 @@ void isiPapanPemain(int* x, int* y) {
             gotoxy(*x, *y);
         }
         get = getch();
+        //kondisi untuk menggerakan kursor dengan tombol panah
         if(get == 75 && *x > 10) {              //Gerak kursor ke kiri
             *x -=6; K -=1;
         } else if(get == 72 && *y > 6) {        //Gerak kursor ke atas
@@ -531,6 +584,8 @@ void isiPapanPemain(int* x, int* y) {
             *x +=6; K +=1;
         } else if(get == 80 && *y <= 45) {      //Gerak kursor ke bawah
             *y +=3; B +=1;
+
+            //Kondisi untuk menaruh kata ke papan
         } else if(isalpha(get) && !isalpha(papan2[B][K])&& get != 'K' && get != 'H' && get != 'M' && get != 'P' && periksaHuruf(get) >= 0) {
             if((hurufPertama() == 0 || barisKolom.B == B || K == barisKolom.K) && (hurufPertama() == 0 || (isalpha(papan2[B+1][K]) || isalpha(papan2[B-1][K]) || isalpha(papan2[B][K+1]) || isalpha(papan2[B][K-1])) || (isalpha(papan[B+1][K]) || isalpha(papan[B-1][K]) || isalpha(papan[B][K+1]) || isalpha(papan[B][K-1])))) {
                 putchar(toupper(get));                      //Menaruh blok ke papan ketika huruf dipunyai pemain
@@ -554,6 +609,8 @@ void isiPapanPemain(int* x, int* y) {
             tampilHurufPemain();
             gotoxy(70, 55);
             printf("                          ");
+
+            //Shortcut fitur permainan
         } else if(get == '1') {
             tukarHuruf(hurufPemain);
             awalSecond -= 100;
@@ -624,6 +681,7 @@ void tampilHurufPemain() {
             }
         }
     }
+    gotoxy(x, y);
 }
 
 //MODUL UNTUK MENARUH BLOK SCRABBLE KE PAPAN
@@ -840,7 +898,7 @@ void resetAll() {
     x = 10; y = 5; B = 0; K = 0;
 }
 
-//MODUL PRINT PAPAN SCRABBLE
+//MODUL PRINT PAPAN SCRABBLE (INTERFACE KETIKA DI DALAM PERMAINAN)
 void printPapan() {
     system("cls");
     char headerPapan[3][91] = {
