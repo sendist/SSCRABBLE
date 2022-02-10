@@ -1,0 +1,33 @@
+	
+						How to Play
+
+  1. Untuk memulai permainan, pilih menu "Play" lalu pilih tingkat kesulitan yang diinginkan.
+	a. EASY : Batas waktu pengisian 90 detik, dan komputer memakai kamus 1000 kata.
+	b. MEDIUM : Batas waktu pengisian 60 detik, dan komputer memakai kamus 4000 kata.
+	c. HARD : Batas waktu Pengisian 45 detik, dan komputer memakai kamus 10000 kata.
+
+  2. Setelah kesulitan ditentukan, Anda akan diberikan 7 buah huruf (tiles) yang bisa dilihat 
+     pada bagian bawah papan. Anda juga dapat melihat waktu yang tersisa, skor, dan jumlah huruf
+     (tiles) yang tersisa.
+
+  3. Saat papan masih kosong, Anda/komputer harus membuat kata pertama dengan syarat melewati bagian
+     tengah papan. Setelahnya Anda dapat mengisi papan dengan syarat menggunakan setidaknya satu buah
+     huruf yang telah ada di papan.
+
+  4. Kata yang Anda masukan haruslah bisa dibaca dari kiri ke kanan atau dari atas ke bawah.
+     Jika kata yang dibentuk menyentuh huruf/kata lain yang telah ada di papan, kata yang terbentuk 
+     juga harus valid.
+
+  5. Skor yang Anda dapatkan adalah skor dari kata yang dibuat termasuk kata yang terbentuk dari
+     menyentuh huruf/kata lain yang telah ada di papan.
+
+  6. Ada 4 tomobl khusus yang dapat Anda gunakan
+	a. "1" : Fitur ganti huruf (semua huruf Anda akan diganti dan giliran Anda akan dilewat)
+	b. "2" : Fitur lewati giliran
+	c. "3" : Fitur restart game (game akan dimulai lagi dari awal dengan kesulitan yang sama)
+	d. "4" : Fitur main menu (kembali ke Main menu)
+
+
+									 Dibuat oleh:
+									Sendi Setiawan
+									  01/01/2022
